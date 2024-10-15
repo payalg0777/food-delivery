@@ -1,0 +1,66 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Order {
+  id             Int      @id @default(autoincrement())
+  customer_id    String
+  restaurant_id  String
+  address_id     String
+  orderTotal     Float
+  status         String   @default("P")
+  created_at     DateTime @default(now())
+  updated_at     DateTime @updatedAt
+
+  // Define relation to OrderItem
+  items           OrderItem[]  @relation("OrderItems")
+
+  // Define relation to Address
+//  address         Address       @relation(fields: [address_id], references: [id])
+}
+
+model OrderItem {
+  id        Int      @id @default(autoincrement())
+  order_id  Int
+  name      String
+  quantity  Int
+  price     Float
+
+  // Define relation to Order
+  order     Order    @relation("OrderItems", fields: [order_id], references: [id])
+}
+
+model Payment {
+  id             Int     @id @default(autoincrement())
+  order_id       String
+  restaurant_id  String
+  customer_id    String
+  amount         Float
+  status         String
+  paymentMethodId String  // Token or ID for the payment method
+  cardEnding     String  // e.g., "1234"
+  cardType       String  // e.g., "Visa"
+}
+
+// model Address {
+//  id          Int      @id @default(autoincrement())
+//  street      String
+//  city        String
+//  state       String
+//  postal_code String
+//  country     String
+//
+  // Define relation to Order
+//  orders      Order[]  @relation("AddressOrders")
+//}

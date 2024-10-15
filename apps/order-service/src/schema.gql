@@ -1,0 +1,57 @@
+# ------------------------------------------------------
+# THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+# ------------------------------------------------------
+
+type OrderItemDto {
+  id: Int!
+  name: String!
+  quantity: Float!
+  price: Float!
+}
+
+type OrderType {
+  id: Int!
+  customer_id: String!
+  restaurant_id: String!
+  address_id: String!
+  items: [OrderItemDto!]!
+  orderTotal: Float!
+  status: String!
+  created_at: DateTime!
+  updated_at: DateTime!
+}
+
+"""
+A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
+"""
+scalar DateTime
+
+type Query {
+  getOrderDetails(id: Float!): OrderType!
+  getOrderById(id: Float!): OrderType!
+  getOrderHistoryOfCustomer(customer_id: String!): [OrderType!]!
+}
+
+type Mutation {
+  createOrder(data: CreateOrderInput!): OrderType!
+  updateOrder(id: Float!, data: UpdateOrderInput!): OrderType!
+}
+
+input CreateOrderInput {
+  customerId: String!
+  restaurantId: String!
+  addressId: String!
+  items: [OrderItemInput!]!
+  orderTotal: Float!
+  status: String! = "P"
+}
+
+input OrderItemInput {
+  name: String!
+  quantity: Float!
+  price: Float!
+}
+
+input UpdateOrderInput {
+  status: String
+}

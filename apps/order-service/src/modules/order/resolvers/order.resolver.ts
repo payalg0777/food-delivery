@@ -1,35 +1,39 @@
-import { Resolver, Query, Mutation, Args, Int } from '@nestjs/graphql';
+import { Resolver, Query, Mutation, Args } from '@nestjs/graphql';
 import { OrderService } from '../services/order.service';
-import { Order } from '../entities/order.entity';
-import { CreateOrderInput } from '../dtos/create-order.input';
-import { UpdateOrderInput } from '../dtos/update-order.input';
+import { CreateOrderInput } from '../dto/create-order.dto';
+import { UpdateOrderInput } from '../dto/update-order.dto';
+import { OrderType } from '../dto/order-output.dto';
 
-@Resolver(() => Order)
+@Resolver(() => OrderType)
 export class OrderResolver {
   constructor(private readonly orderService: OrderService) {}
 
-  @Mutation(() => Order)
-  createOrder(@Args('createOrderInput') createOrderInput: CreateOrderInput) {
-    return this.orderService.create(createOrderInput);
+  @Mutation(() => OrderType)
+  async createOrder(@Args('data') data: CreateOrderInput) {
+    console.log('data: ', data);
+    return this.orderService.createOrder(data);
   }
 
-  @Query(() => [Order], { name: 'order' })
-  findAll() {
-    return this.orderService.findAll();
+  @Mutation(() => OrderType)
+  async updateOrder(
+    @Args('id') id: number,
+    @Args('data') data: UpdateOrderInput,
+  ) {
+    return this.orderService.updateOrder(id, data);
   }
 
-  @Query(() => Order, { name: 'order' })
-  findOne(@Args('id', { type: () => Int }) id: number) {
-    return this.orderService.findOne(id);
+  @Query(() => OrderType)
+  async getOrderDetails(@Args('id') id: number) {
+    return this.orderService.getOrderDetails(id);
   }
 
-  @Mutation(() => Order)
-  updateOrder(@Args('updateOrderInput') updateOrderInput: UpdateOrderInput) {
-    return this.orderService.update(updateOrderInput.id, updateOrderInput);
+  @Query(() => OrderType)
+  async getOrderById(@Args('id') id: number) {
+    return this.orderService.getOrderById(id);
   }
 
-  @Mutation(() => Order)
-  removeOrder(@Args('id', { type: () => Int }) id: number) {
-    return this.orderService.remove(id);
+  @Query(() => [OrderType])
+  async getOrderHistoryOfCustomer(@Args('customer_id') customer_id: string) {
+    return this.orderService.getOrderHistoryOfCustomer(customer_id);
   }
 }

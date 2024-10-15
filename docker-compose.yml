@@ -1,0 +1,151 @@
+version: '3.8'
+
+services:
+  order-service:
+    build:
+      context: ./apps/order-service
+      dockerfile: Dockerfile
+      target: development
+    command: npm run start:dev
+    env_file:
+      - ./apps/order-service/.env
+    depends_on:
+      - order-db
+      - kafka
+    volumes:
+      - ./apps/order-service:/usr/src/app
+      - /usr/src/app/node_modules
+    ports:
+      - '3000:3000'
+    networks:
+      - my-network
+
+  order-db:
+    image: postgres:14
+    env_file:
+      - ./apps/order-service/.env
+    ports:
+      - '5432:5432'
+    networks:
+      - my-network
+
+  payment-service:
+    build:
+      context: ./apps/payment-service
+      dockerfile: Dockerfile
+      target: development
+    command: npm run start:dev
+    env_file:
+      - ./apps/payment-service/.env
+    depends_on:
+      - payment-db
+      - kafka
+    volumes:
+      - ./apps/payment-service:/usr/src/app
+      - /usr/src/app/node_modules
+    ports:
+      - '3001:3001'
+    networks:
+      - my-network
+
+  payment-db:
+    image: postgres:14
+    env_file:
+      - ./apps/payment-service/.env
+    ports:
+      - '5433:5432'
+    networks:
+      - my-network
+
+  user-service:
+    build:
+      context: ./apps/user-service
+      dockerfile: Dockerfile
+      target: development
+    command: npm run start:dev
+    env_file:
+      - ./apps/user-service/.env
+    depends_on:
+      - user-db
+      - kafka
+    volumes:
+      - ./apps/user-service:/usr/src/app
+      - /usr/src/app/node_modules
+    ports:
+      - '3002:3002'
+    networks:
+      - my-network
+
+  auth-service:
+    build:
+      context: ./apps/auth-service
+      dockerfile: Dockerfile
+      target: development
+    command: npm run start:dev
+    env_file:
+      - ./apps/auth-service/.env
+    depends_on:
+      - user-db
+    volumes:
+      - ./apps/auth-service:/usr/src/app
+      - /usr/src/app/node_modules
+    ports:
+      - '3003:3003'
+    networks:
+      - my-network
+
+  user-db:
+    image: postgres:14
+    env_file:
+      - ./libs/common/databse/.env
+    ports:
+      - '5434:5432'
+    networks:
+      - my-network
+
+  zookeeper:
+    image: bitnami/zookeeper:latest # wurstmeister/zookeeper:3.4.6
+    ports:
+      - '2181:2181'
+    environment:
+      - ALLOW_ANONYMOUS_LOGIN=yes
+    volumes:
+      - zookeeper_data:/bitnami/zookeeper
+    networks:
+      - my-network
+
+  kafka:
+    image: bitnami/kafka:latest # wurstmeister/kafka:latest
+    environment:
+      # - KAFKA_ZOOKEEPER=zookeeper:2181
+      # - KAFKA_ADVERTISED_LISTENERS=INSIDE://kafka:9092,OUTSIDE://0.0.0.0:9094
+      # - KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=INSIDE:PLAINTEXT,OUTSIDE:PLAINTEXT
+      # - KAFKA_LISTENERS=INSIDE://0.0.0.0:9092,OUTSIDE://0.0.0.0:9094
+      - KAFKA_CFG_ZOOKEEPER_CONNECT=zookeeper:2181
+      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092,EXTERNAL://:9094
+      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092,EXTERNAL://localhost:9094
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=EXTERNAL:PLAINTEXT,PLAINTEXT:PLAINTEXT
+    ports:
+      - '9094:9094' # External port for accessing Kafka from outside
+      - '9092:9092' # Internal port for service communication
+    depends_on:
+      - zookeeper
+    volumes:
+      - kafka_data:/bitnami/kafka
+    networks:
+      - my-network
+
+volumes:
+  order-db-data:
+    driver: local
+  payment-db-data:
+    driver: local
+  user-db-data:
+    driver: local
+  zookeeper_data:
+    driver: local
+  kafka_data:
+    driver: local
+
+networks:
+  my-network:
